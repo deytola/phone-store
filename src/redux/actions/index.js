@@ -1,9 +1,12 @@
 import { fetchUsers, login, getCurrentUser } from "./user/userActions";
+import { fetchGadgets, filterGadgets } from "./gadget/gadgetActions";
 
 const rootActions = {
     fetchUsers,
     login,
-    getCurrentUser
+    getCurrentUser,
+    fetchGadgets,
+    filterGadgets
 }
 
 

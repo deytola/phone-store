@@ -1,18 +1,6 @@
 import Action_Types from "./userActionTypes";
 import axios from "axios";
 
-axios.interceptors.response.use(
-    response => {
-        localStorage.setItem('ACCESS_TOKEN', `Bearer ${response.data?.oauth?.token}`);
-        console.log('Interceptor Response', response.data?.oauth?.token)
-        return response;
-    },
-    error => {
-        return Promise.reject(error);
-    }
-);
-
-
 
 export const fetchUsersRequest =  () => {
     return {
