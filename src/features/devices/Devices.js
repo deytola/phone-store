@@ -1,11 +1,12 @@
-import ReactSlider from "react-slider";
-import {BsArrowRight} from "react-icons/bs";
 import {useEffect, useState} from "react";
-import {connect} from "react-redux";
-import rootActions from "../redux/actions";
-import GadgetsImage from "../assets/Gadget-PNG-Pic.png";
+import GadgetsImage from "../../assets/Gadget-PNG-Pic.png";
+import IphoneImage from "../../assets/iphone_images.jpeg";
+import {BsArrowRight} from "react-icons/bs";
+import axios from "axios";
+import ReactSlider from "react-slider";
 
-const Home = ({gadgetData, filterGadgets, fetchGadgets}) => {
+export const Devices = () => {
+    const [page, setPage] = useState(12)
     const MIN_PRICE = 0
     const MAX_PRICE = 2500
     const [values, setValues] = useState([MIN_PRICE, MAX_PRICE]);
@@ -18,44 +19,80 @@ const Home = ({gadgetData, filterGadgets, fetchGadgets}) => {
         storageSizeString: ""
     });
 
-    useEffect(() => {
-        fetchGadgets()
-    }, []);
+    const showMore = () => {
+        setPage(page + 12)
+    }
 
     useEffect(() => {
-        setDisplayedData(gadgetData.data);
-    }, [gadgetData])
+        axios.get("http://localhost:4000/api/traderequests/load")
+            .then((resp) => {
+                const {data} = resp.data
+                let transformedData = [];
+                if (data) {
+                    let count = 1;
+                    data.forEach((device) => {
+                        device.pricing?.forEach((price) => {
+                            transformedData.push({
+                                id: count,
+                                requestType: device.requestType,
+                                deviceName: device.deviceName,
+                                storageSize: price.storageSize,
+                                lockedOrUnlocked: 'Unlocked',
+                                quantity: Math.floor(Math.random() * 9999),
+                                grade: "New",
+                                unitPrice: price.new
+                            });
+                            count++;
+                        });
+                    });
+                }
+                console.log(transformedData)
+                setDisplayedData(transformedData);
+            })
+    }, [])
 
 
+    // useEffect(() => {
+    //
+    //     const {products} = devices;
+    //
+    //
+    //     const newGadgetData = products.filter((item) => {
+    //         return (
+    //             item.lowestAsk?.grade?.toLowerCase().includes(searchData.searchTerm?.toLowerCase()) ||
+    //             item.lowestAsk?.storageSize?.toLowerCase().includes(searchData.searchTerm?.toLowerCase()) ||
+    //             item.lowestAsk?.price == searchData?.searchTerm ||
+    //             item.name?.toLowerCase().includes(searchData.searchTerm?.toLowerCase())
+    //         );
+    //     });
+    //     searchData.searchTerm.length === 0
+    //         ? setDisplayedData(products)
+    //         : setDisplayedData(newGadgetData);
+    // }, [searchData.searchTerm]);
 
-    useEffect(() => {
-
-        const newGadgetData = gadgetData.data.filter((item) => {
-            return (
-                item.lowestAsk?.grade?.toLowerCase().includes(searchData.searchTerm.toLowerCase()) ||
-                item.lowestAsk?.storageSize?.toLowerCase().includes(searchData.searchTerm.toLowerCase()) ||
-                item.lowestAsk?.price == searchData.searchTerm ||
-                item.name.toLowerCase().includes(searchData.searchTerm.toLowerCase())
-            );
-        });
-        searchData.searchTerm.length === 0
-            ? setDisplayedData(gadgetData.data)
-            : setDisplayedData(newGadgetData);
-    }, [searchData.searchTerm]);
-
-    useEffect(() => {
-        const newGadgetData = gadgetData.data.filter((item) => {
-            return (
-                item.lowestAsk?.storageSize?.toLowerCase().includes(searchData.storageSizeString.toLowerCase())
-            );
-        });
-        searchData.storageSizeString.length === 0
-            ? setDisplayedData(gadgetData.data)
-            : setDisplayedData(newGadgetData);
-    }, [searchData.storageSizeString]);
-
-
-
+    // useEffect(() => {
+    //     if(resp){
+    //         const {data} = resp;
+    //         let transformedData = [];
+    //         let count = 1;
+    //         data.forEach((device) => {
+    //             device.pricing?.forEach((price)=>{
+    //                 transformedData.push({
+    //                     id: count,
+    //                     requestType: device.requestType,
+    //                     deviceName: device.deviceName,
+    //                     storageSize: price.storageSize,
+    //                     lockedOrUnlocked: 'Unlocked',
+    //                     quantity: Math.floor(Math.random() * 9999),
+    //                     grade: "New",
+    //                     unitPrice: price.new
+    //                 });
+    //                 count++;
+    //             });
+    //         });
+    //     }
+    //     setDisplayedData(transformedData);
+    // }, [resp]);
 
 
     return (
@@ -76,7 +113,7 @@ const Home = ({gadgetData, filterGadgets, fetchGadgets}) => {
             </section>
             <section className={"text-light p-3"}>
                 <div className={"d-flex"}>
-                    <div className={"w-70 h-100 bg-secondary p-3 me-3"}>
+                    <div className={"w-70 h-100 bg-secondary p-3 me-3 sticky-top"}>
                         <h6 className={"text-start fw-bold"}>Categories</h6>
                         <div className={"d-flex flex-column ps-3 align-items-start"}>
                             {
@@ -87,7 +124,7 @@ const Home = ({gadgetData, filterGadgets, fetchGadgets}) => {
                         </div>
                         <h6 className={"text-start fw-bolder mt-5"}>Price Filter</h6>
                         <div className={"d-flex flex-column align-items-start"}>
-                            <h8 className={"text-md-center"}>${values[0]}  -  ${values[1]}</h8>
+                            <h6 className={"text-md-center"}>${values[0]}  -  ${values[1]}</h6>
                             <ReactSlider
                                 value={values}
                                 defaultValue={[MIN_PRICE, MAX_PRICE]}
@@ -99,9 +136,11 @@ const Home = ({gadgetData, filterGadgets, fetchGadgets}) => {
                                 trackClassName="example-track"
                             />
                             <div className={"d-flex flex-column align-items-center"}>
-                                <input type="number" value={searchData.minPrice} onChange={(e) => setSearchData({...searchData, minPrice: parseFloat(e.target.value)})} onBlur={() => filterGadgets(searchData)} className="form-input mt-4 mb-1" placeholder={"Min"}/>
+                                <input type="number" value={searchData.minPrice} onChange={(e) => setSearchData({...searchData, minPrice: parseFloat(e.target.value)})} className="form-input mt-4 mb-1" placeholder={"Min"}/>
+                                {/*<input type="number" value={searchData.minPrice} onChange={(e) => setSearchData({...searchData, minPrice: parseFloat(e.target.value)})} /!*onBlur = {() => filterGadgets(searchData)}*!/ className="form-input mt-4 mb-1" placeholder={"Min"}/>*/}
                                 <span>|</span>
-                                <input type="number" value={searchData.maxPrice} onChange={(e) => setSearchData({...searchData, maxPrice: parseFloat(e.target.value)})} onBlur={() => filterGadgets(searchData)} className="form-input mt-2" placeholder={"Max"}/>
+                                <input type="number" value={searchData.maxPrice} onChange={(e) => setSearchData({...searchData, maxPrice: parseFloat(e.target.value)})} className="form-input mt-2" placeholder={"Max"}/>
+                                {/*<input type="number" value={searchData.maxPrice} onChange={(e) => setSearchData({...searchData, maxPrice: parseFloat(e.target.value)})} /!*onBlur = {() => filterGadgets(searchData)}*!/ className="form-input mt-2" placeholder={"Max"}/>*/}
                             </div>
                         </div>
                         <h6 className={"text-start fw-bold mt-5"}>Storage</h6>
@@ -140,28 +179,30 @@ const Home = ({gadgetData, filterGadgets, fetchGadgets}) => {
                         <div>
                             <div className={"row text-center text-dark g-4"}>
                                 {
-                                    gadgetData.loading ? (
-                                    <h2 className={"text-light"}>Loading...</h2>
-                                    ) : gadgetData.error ? (
-                                    <h2 className={"text-light"}>postData.error</h2>
-                                    ) :
-                                        displayedData.map((gadget) => {
+                                    // isLoading ? (
+                                    // <h2 className={"text-light"}>Loading...</h2>
+                                    // ) : isError ? (
+                                    // <h2 className={"text-light"}>{error}</h2>
+                                    // ) :
+                                        displayedData.slice(0, page).map((gadget, index) => {
                                         return (
-                                            <div key={gadget._id} className={"col-3 text-light"}>
-                                                <div className="card pt-3  bg-secondary" style={{width: "13rem"}}>
+                                            <div key={index} className={"col-3 text-light"}>
+                                                <div className="card pt-3  bg-secondary" style={{width: "17rem"}}>
                                                     <div className={"d-flex justify-content-end"}>
                                                         {
-                                                            gadget.lowestAsk?.grade ? <button type="button" className="btn bg-secondary rounded-0 text-light border-light disabled btn-outline-info m-1">{gadget.lowestAsk?.grade}</button> : <span className={"m-1"}>N/A</span>
+                                                            gadget.grade? <button type="button" className="btn bg-secondary rounded-0 text-light border-light disabled btn-outline-info m-1">{gadget.grade}</button> : <span className={"m-1"}>N/A</span>
                                                         }
                                                     </div>
-                                                    <img src={gadget.imgUrl} className="card-img-top"/>
-                                                    <div className="card-body">
-                                                        <h5 className="card-title text-start">{gadget.name}</h5>
-                                                        <p className="card-text text-start ">{gadget.lowestAsk?.carrier && gadget.lowestAsk?.storageSize ? `${gadget.lowestAsk?.carrier} | ${gadget.lowestAsk?.storageSize}`  : "N/A"}</p>
+                                                    <img src={IphoneImage} className="card-img-top" alt={gadget.deviceName}/>
+                                                    <div className="card-body text-light">
+                                                        <h5 className="card-title text-start ">{gadget.deviceName}</h5>
+                                                        <p className="card-text text-start ">{gadget.lockedOrUnlocked && gadget.storageSize ? `${gadget.lockedOrUnlocked} | ${gadget.storageSize}`  : "N/A"}</p>
                                                         <p className="card-text text-start ">Unit price</p>
-                                                        <h3 className="card-text text-start ">{gadget.lowestAsk?.price ? `$${gadget.lowestAsk?.price}` : "N/A"}</h3>
+                                                        <h3 className="card-text text-start ">{gadget.unitPrice ? `$${gadget.unitPrice}` : "N/A"}</h3>
                                                         <p className="card-text text-start ">{gadget.quantity ? `${gadget.quantity} Available` : "N/A"}</p>
-                                                        <a href="#" className="btn btn-primary w-10">BUY</a>
+                                                        <div className={"d-flex justify-content-end"}>
+                                                            <a href="#" className="btn btn-primary w-10">BUY</a>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -169,30 +210,14 @@ const Home = ({gadgetData, filterGadgets, fetchGadgets}) => {
                                     })
                                 }
                             </div>
+
+                            {!!displayedData.length && <div className={"d-flex justify-content-center my-4"}>
+                                <button className="btn btn-primary w-10" onClick={showMore}>Load More</button>
+                            </div>}
                         </div>
                     </div>
                 </div>
             </section>
-
         </div>
     )
 }
-
-
-
-const mapStateToProps = (state) => {
-    return {
-        userData: state.users,
-        gadgetData: state.gadgets
-    }
-}
-
-const mapDispatchToProps = (dispatch) => {
-    return {
-        fetchUsers: () => dispatch(rootActions.fetchUsers()),
-        fetchGadgets: () => dispatch(rootActions.fetchGadgets()),
-        filterGadgets: (searchData) => dispatch(rootActions.filterGadgets(searchData)),
-    }
-}
-
-export default connect (mapStateToProps, mapDispatchToProps)(Home);
